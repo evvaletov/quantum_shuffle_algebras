@@ -2,7 +2,7 @@
 # Quantum Shuffle Algebras Package
 Authors: Eremey Valetov
 Creation date: 09-Sep-2016  
-Email: valetove@msu.edu
+Email: evv@msu.edu
 
 ## 1. Description
 
