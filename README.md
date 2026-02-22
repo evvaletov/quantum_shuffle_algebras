@@ -1,60 +1,109 @@
 # Quantum Shuffle Algebras Package
 
+**Mathematica + Julia** | [MIT License](LICENSE.md)
+
 **Author:** Eremey Valetov\
 **Creation date:** 09-Sep-2016\
-**Email:** evv@msu.edu
+**Email:** eremey@valetov.com
 
 ## Description
 
-A Mathematica package for quantum shuffle algebra calculations, including
-construction of bases in terms of Lyndon words (primes), element comparison,
-unique prime factorization, and quantum shuffle multiplication.
+A package for quantum shuffle algebra calculations, including construction of
+bases in terms of Lyndon words (primes), element comparison, unique prime
+factorization, quantum shuffle multiplication, Hopf algebra operations
+(coproduct, counit, antipode), Lyndon word enumeration, and diagonal braiding.
+
+Available in both **Mathematica** and **Julia**.
 
 ## Requirements
 
-- Mathematica 10.4 or later
+- **Mathematica:** version 10.4 or later
+- **Julia:** version 1.6 or later
 
-## Installation
+## Installation (Mathematica)
 
-Copy `QSA Package.nb` to a directory on Mathematica's search path, for example:
+Copy `QuantumShuffleAlgebra.wl` to a directory on Mathematica's search path:
 
 ```
 $UserBaseDirectory/Applications/
 ```
 
-You can find this path by evaluating `$UserBaseDirectory` in a Mathematica
-notebook. On most systems it resolves to:
-
-- **Linux:** `~/.Mathematica/Applications/`
-- **macOS:** `~/Library/Mathematica/Applications/`
-- **Windows:** `%APPDATA%\Mathematica\Applications\`
-
-## Quick Start
+Then load:
 
 ```mathematica
-(* Load the package *)
-Get["QSA Package.nb"]
+Get["QuantumShuffleAlgebra`"]
+```
 
-(* Check whether a word is prime (a Lyndon word) *)
-QSAIsPrime[{1, 2}]
-(* True *)
+## Installation (Julia)
 
-(* Compute the unique prime factorization of a word *)
-QSAUniquePrimeFactorization[{2, 1, 2}]
-(* {{1, 2}, {2}} *)
+```julia
+using Pkg
+Pkg.develop(path="julia/")
+
+using QuantumShuffleAlgebras
+```
+
+## Quick Start (Mathematica)
+
+```mathematica
+Get["QuantumShuffleAlgebra`"]
+
+(* Check whether a word is a Lyndon word *)
+QSAIsPrime[{1, 2}]     (* True *)
+
+(* Unique prime factorization *)
+QSAUniquePrimeFactorization[{2, 1}]     (* {{2}, {1}} *)
+
+(* Quantum shuffle product *)
+QSAShuffleMultiplication[{{1}, {2}}]
+
+(* Enumerate Lyndon words up to length 3 over {1,2} *)
+QSALyndonWords[3, {1, 2}]
+
+(* Hopf algebra coproduct *)
+QSACoproduct[{1, 2}]
 ```
 
 ## Functions
 
+### Core operations
+
 | Function | Purpose |
 |---|---|
-| `QSAX[word]` | Represent a word as an element of the algebra |
-| `QSARelation[i, j]` | The q-relation between generators i and j |
-| `QSAShuffleMultiplication[a, b]` | Quantum shuffle product of two elements |
-| `QSAIsPrime[word]` | Test whether a word is a Lyndon word (prime) |
-| `QSAFirstPrime[word]` | Extract the first prime factor |
-| `QSAUniquePrimeFactorization[word]` | Compute the unique factorization into primes |
-| `QSAExpressInLyndonWords[expr]` | Express an element in the Lyndon word basis |
+| `QSARelation[x, y]` | Compare words (1 = >, 0 = =, -1 = <) |
+| `QSAIsPrime[word]` | Test whether a word is a Lyndon word |
+| `QSAFirstPrime[word]` | Longest Lyndon prefix |
+| `QSAUniquePrimeFactorization[word]` | Factorization into Lyndon words |
+| `QSAX[word, qpar]` | Quantum shuffle basis element X_a |
+| `QSAShuffleMultiplication[{a, b}]` | Quantum shuffle product v_a . v_b |
+| `QSAPrimaryCoefficient[word]` | Coefficient of v_a in X_a |
+| `QSAExpressInLyndonWords[word]` | Express v_a in terms of X_c's |
+
+### Lyndon word enumeration
+
+| Function | Purpose |
+|---|---|
+| `QSALyndonWords[n, alphabet]` | All Lyndon words up to length n |
+
+### Hopf algebra
+
+| Function | Purpose |
+|---|---|
+| `QSACoproduct[word, q]` | Deconcatenation coproduct |
+| `QSACounit[word]` | Counit (1 for empty word, 0 otherwise) |
+| `QSAAntipode[word, q]` | Antipode via Hopf axiom |
+
+### Braiding
+
+| Function | Purpose |
+|---|---|
+| `QSABraid[word1, word2, qMatrix]` | Diagonal braiding |
+
+## Tests
+
+```
+wolframscript -file tests/RunTests.wl
+```
 
 ## Copyright and Citation
 
