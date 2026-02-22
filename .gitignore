@@ -1,0 +1,3 @@
+*.nb.bak
+.Mathematica/
+FrontEnd/
