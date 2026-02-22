@@ -119,4 +119,62 @@ using QuantumShuffleAlgebras
         @test c2 == Q[1, 2] * Q[2, 2]  # 3 * 1 = 3
     end
 
+    @testset "Standard factorization" begin
+        # {2,1} is Lyndon with standard factorization ({2}, {1})
+        # {1} is the longest proper Lyndon suffix
+        u, v = standard_factorization(Word([2, 1]))
+        @test u == Word([2])
+        @test v == Word([1])
+
+        # {3,1,2} = ({3}, {1,2})? Let's check: suffix {2} is Lyndon (length 1),
+        # suffix {1,2} — is it Lyndon? is_lyndon({1,2}) = false (suffix {2} > {1,2})
+        # So longest proper Lyndon suffix is {2}
+        u2, v2 = standard_factorization(Word([3, 1, 2]))
+        @test is_lyndon(v2)
+        @test is_lyndon(u2)
+        @test vcat(u2, v2) == Word([3, 1, 2])
+    end
+
+    @testset "Quantum bracket" begin
+        Q = [1 2; 3 1]
+
+        # Single letter: bracket is just the letter
+        b1 = quantum_bracket(Word([1]), Q)
+        @test length(b1.terms) == 1
+        @test b1.terms[1].word == [1]
+        @test b1.terms[1].coeff == 1
+
+        # {2,1}: standard_factorization = ({2}, {1})
+        # q_factor = Q[1,2] = 2
+        # [2,1]_Q = sh_Q([2],[1]) - 2*sh_Q([1],[2])
+        # sh_Q([2],[1]) = {[2,1]=>1, [1,2]=>Q[2,1]} = {[2,1]=>1, [1,2]=>3}
+        # sh_Q([1],[2]) = {[1,2]=>1, [2,1]=>Q[1,2]} = {[1,2]=>1, [2,1]=>2}
+        # Result = {[2,1]=>1-4, [1,2]=>3-2} = {[2,1]=>-3, [1,2]=>1}
+        b21 = quantum_bracket(Word([2, 1]), Q)
+        @test !isempty(b21.terms)
+        @test length(b21.terms) == 2
+        d = Dict(t.word => t.coeff for t in b21.terms)
+        @test d[[2, 1]] == -3
+        @test d[[1, 2]] == 1
+
+        # With Q = all ones, commutator vanishes (classical case)
+        Q_trivial = [1 1; 1 1]
+        b21_trivial = quantum_bracket(Word([2, 1]), Q_trivial)
+        @test isempty(b21_trivial.terms)
+    end
+
+    @testset "PBW monomials" begin
+        Q = [1 1; 1 1]
+
+        # Degree 1 over {1,2}: Lyndon words are {1} and {2}
+        # PBW monomials: unit, [1], [2] (degree 0 and 1)
+        monos = pbw_monomials(1, [1, 2], Q)
+        # Should have: (), (1), (2)
+        @test length(monos) >= 3
+
+        # Degree 2: adds [1]^2, [2]^2, [1]*[2], and [2,1]
+        monos2 = pbw_monomials(2, [1, 2], Q)
+        @test length(monos2) > length(monos)
+    end
+
 end

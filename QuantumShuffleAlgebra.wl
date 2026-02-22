@@ -71,6 +71,20 @@ QSAAntipode::usage =
 QSABraid::usage =
   "QSABraid[word1, word2, qMatrix] computes the diagonal braiding sigma(e_i \\[TensorProduct] e_j) = q_{ij} (e_j \\[TensorProduct] e_i).";
 
+QSAStandardFactorization::usage =
+  "QSAStandardFactorization[l] returns {u, v} where l = Join[u,v], v is the longest proper Lyndon suffix.";
+
+QSAQuantumBracket::usage =
+  "QSAQuantumBracket[l, qMatrix] computes the quantum root vector [l]_q via iterated q-commutator using standard factorization.";
+
+QSAPBWMonomials::usage =
+  "QSAPBWMonomials[degree, alphabet, qMatrix] enumerates PBW basis monomials up to the given total degree.";
+
+(* Public symbols used in output expressions *)
+v;
+q;
+Q;
+
 Begin["`Private`"];
 
 (* --- Internal helpers --- *)
@@ -231,17 +245,12 @@ QSAExpressInLyndonWords[x_] :=
 (* --- Tier 1: Lyndon word enumeration --- *)
 
 QSALyndonWords[n_Integer, alphabet_List] :=
-  Module[{words = {}, k, w, alpha, sorted},
+  Module[{words = {}, sorted},
     sorted = Sort[alphabet];
-    (* Generate via Duval's algorithm variant *)
-    (* Length 1: each letter is a Lyndon word *)
     words = List /@ sorted;
     Do[
       words = Join[words,
-        Select[
-          Flatten[Table[Append[w, a], {w, Select[words, Length[#] == len - 1 &]},
-                        {a, sorted}], 1],
-          QSAIsPrime[#] &]],
+        Select[Tuples[sorted, len], QSAIsPrime[#] &]],
       {len, 2, n}];
     words];
 
@@ -279,6 +288,54 @@ QSABraid[word1_List, word2_List, qMatrix_] :=
         {j, word2}],
       {i, word1}];
     coeff * TensorProduct @@ (Subscript[v, #] & /@ Join[word2, word1])];
+
+(* --- Tier 2: PBW basis construction --- *)
+
+QSAStandardFactorization[l_List] :=
+  Module[{k},
+    If[Length[l] <= 1, Return[$Failed]];
+    For[k = 2, k <= Length[l], k++,
+      If[QSAIsPrime[l[[k ;; -1]]],
+        Return[{l[[1 ;; k - 1]], l[[k ;; -1]]}]]];
+    $Failed];
+
+QSAQuantumBracket[l_List, qMatrix_] :=
+  Module[{u, v, bu, bv, uv, vu, qfactor, sf},
+    If[Length[l] == 1,
+      Return[Subscript[v, l[[1]]]]];
+    sf = QSAStandardFactorization[l];
+    u = sf[[1]]; v = sf[[2]];
+    bu = QSAQuantumBracket[u, qMatrix];
+    bv = QSAQuantumBracket[v, qMatrix];
+    (* Quantum shuffle product of brackets *)
+    uv = QSAShuffleMultiplication[{u, v}];
+    vu = QSAShuffleMultiplication[{v, u}];
+    (* q-factor = product of qMatrix[v_j, u_i] for all pairs *)
+    qfactor = Product[qMatrix[[v[[j]], u[[i]]]],
+      {j, Length[v]}, {i, Length[u]}];
+    Expand[uv - qfactor vu]];
+
+QSAPBWMonomials[degree_Integer, alphabet_List, qMatrix_] :=
+  Module[{lw, brackets, result = {}, monomial},
+    lw = QSALyndonWords[degree, alphabet];
+    brackets = Association @@ Table[l -> QSAQuantumBracket[l, qMatrix], {l, lw}];
+    (* Generate ordered products of brackets up to total degree *)
+    qsaPBWRecurse[result, lw, brackets, degree, 1, 1, {}];
+    result];
+
+qsaPBWRecurse[result_, lw_, brackets_, maxDeg_, startIdx_, currentExpr_, currentDesc_] :=
+  Module[{l, wlen, newExpr, newDesc, power},
+    Do[
+      l = lw[[i]]; wlen = Length[l];
+      Do[
+        If[Total[QSAWordToLength /@ currentDesc] + wlen exp > maxDeg, Break[]];
+        power = Nest[Function[x, Expand[x brackets[l]]], brackets[l], exp - 1];
+        newExpr = If[currentExpr === 1, power, Expand[currentExpr power]];
+        newDesc = Append[currentDesc, Table[l, exp]];
+        AppendTo[result, {newExpr, newDesc}];
+        qsaPBWRecurse[result, lw, brackets, maxDeg, i + 1, newExpr, newDesc],
+        {exp, 1, Floor[(maxDeg - Total[Length /@ Flatten[currentDesc, 1]]) / wlen]}],
+      {i, startIdx, Length[lw]}]];
 
 End[];
 

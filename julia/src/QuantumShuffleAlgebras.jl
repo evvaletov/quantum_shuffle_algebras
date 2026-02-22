@@ -5,10 +5,12 @@ export is_lyndon, first_lyndon_prefix, lyndon_factorize, lyndon_words
 export relation, shuffle, quantum_shuffle
 export coproduct, counit, antipode
 export braid
+export standard_factorization, quantum_bracket, pbw_monomials
 
 include("lyndon.jl")
 include("shuffle.jl")
 include("hopf.jl")
 include("braid.jl")
+include("pbw.jl")
 
 end
