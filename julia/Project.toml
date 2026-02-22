@@ -1,0 +1,15 @@
+name = "QuantumShuffleAlgebras"
+uuid = "7ef59fc6-344f-42da-9aa6-dbf8fba716b0"
+version = "0.1.0"
+authors = ["Eremey Valetov <eremey@valetov.com>"]
+
+[deps]
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
+
+[compat]
+julia = "1.6"
